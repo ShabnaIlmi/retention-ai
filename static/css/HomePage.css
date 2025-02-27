@@ -1,0 +1,588 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #2b2d42; /* Darker background for a modern feel */
+}
+
+/* Navigation Bar */
+.nav {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    backdrop-filter: blur(15px); /* Stronger blur effect */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    padding: 0 15px;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+/* Logo Container */
+.logopic {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+}
+
+.logopic img {
+    width: 200px;
+    display:block;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.logopic .logo-text {
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+    font-family: 'Lobster', cursive;
+    transition: color 0.3s ease;
+}
+
+/* Hover effect for logo text */
+.logopic:hover .logo-text {
+    color: #ff7f50; /* A stylish coral color on hover */
+}
+
+.logopic:hover img {
+    transform: scale(1.05); /* Slight zoom on hover for the logo */
+}
+
+/* Navigation Menu */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+/* List of navigation items */
+.nav-menu ul {
+    display: flex;
+    gap: 30px;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+/* Style for each menu item */
+.nav-menu ul li {
+    position: relative;
+}
+
+.nav-menu ul li .link {
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    padding-bottom: 10px;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover effect for links */
+.nav-menu ul li .link:hover {
+    color: #ff7f50; /* Stylish hover effect */
+    transform: translateY(-5px); /* Slight lift effect */
+    border-bottom: 2px solid #ff7f50; /* Underline effect */
+}
+
+/* Active link with border */
+.current-page {
+    border-bottom: 2px solid #ff7f50;
+}
+
+/* Navigation Buttons */
+.nav-button .btn {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #ff7f50;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-button .btn:hover {
+    background-color: #ff5733;
+    transform: scale(1.05);
+}
+
+/* White Button Style */
+.btn.white-btn {
+    background-color: #fff;
+    color: #333;
+    border: 2px solid #ff7f50;
+}
+
+.btn.white-btn:hover {
+    background-color: #ff7f50;
+    color: #fff;
+}
+
+/* Mobile Responsive */
+.nav-menu-btn {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        background-color: rgba(255, 255, 255, 0.9);
+        position: absolute;
+        top: 120px;
+        left: 0;
+        right: 0;
+        padding: 20px 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 9999;
+    }
+
+    .nav-menu-btn {
+        display: block;
+        cursor: pointer;
+        font-size: 28px;
+    }
+
+    .nav-menu.open {
+        display: flex;
+    }
+
+    .nav-menu ul {
+        display: block;
+        gap: 20px;
+    }
+
+    .nav-menu ul li .link {
+        font-size: 22px;
+    }
+}
+
+/* Background Video */
+.background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* Styling the Top Box */
+.topbox {
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin-top: 150px;
+    padding-top: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+}
+
+/* Big Text Styling */
+.big-txt {
+    font-size: 60px;
+    font-weight: 700;
+    color: rgb(255, 255, 255);
+    line-height: 1.2;
+    font-family: 'Lobster', cursive;
+    letter-spacing: 2px;
+    flex: 1;
+}
+
+/* Small Text Styling */
+.small-txt {
+    font-size: 30px;
+    color: rgba(232, 244, 253, 0.783);
+    padding-top: 20px;
+    line-height: 1.4;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    flex: 1;
+    text-align: justify;
+}
+
+/* Button Container */
+.btncontainer {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    flex: 1;
+}
+
+.gsbtn {
+    background-color: #00BFFF;
+    color: white;
+    pointer-events: auto;
+    padding: 8px 16px; /* Reduce padding further */
+    font-size: 14px; /* Reduce text size */
+    font-weight: 600;
+    border: none;
+    border-radius: 20px; /* Adjust roundness */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    width: 220px; /* Set explicit width */
+    height: 60px; /* Set explicit height */
+    display: inline-block; /* Ensure correct sizing */
+    text-align: center; /* Keep text centered */
+}
+
+.gsbtn:hover {
+    background-color: #1E90FF;
+    box-shadow: 0 2px 4px rgba(0, 191, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.gsbtn:focus {
+    outline: none;
+}
+
+/* Extra Small Text */
+.xs-txt {
+    font-size: 14px;
+    color: rgba(240, 248, 255, 0.703);
+    margin-top: 10px;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Background Styling */
+.topbox {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 50px 20px;
+    border-radius: 10px;
+}
+
+/* Concept Section (Video) */
+.concept {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-left: 0px;
+    flex: 1;
+}
+
+/* Container for Video */
+.video-container {
+    text-align: center;
+    margin-top: 0px;
+    flex: 1;
+}
+
+/* Styling Video */
+.concept-video {
+    width: 80%;
+    height: auto;
+    max-height: 600px;
+    object-fit: cover;
+    border-radius: 15px;
+    border: 5px solid white; /* Thick white border */
+    box-shadow: 0 4px 15px hwb(0 5% 95% / 0.945);
+}
+
+/* Container for the form */
+.form-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 250vh;
+}
+
+/* Churn Prediction Form Container */
+.churn-prediction-container {
+    background-color: #121111;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    transition: all 0.3s ease;
+}
+
+
+.churn-heading {
+    font-size: 1.5em;
+    text-align: center;
+    color: hsl(0, 16%, 94%);
+    margin-bottom: 10px;
+}
+
+.churn-description {
+    text-align: center;
+    color: #fbf2f2;
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: hsl(0, 22%, 90%);
+    font-weight: bold;
+}
+
+/* Input Fields */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.number-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.number-input input[type="number"] {
+    width: 60%;
+    padding: 8px;
+    font-size: 16px;
+    text-align: center;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    background-color: #fafafa;
+    transition: border-color 0.2s;
+}
+
+.number-input input[type="number"]:focus {
+    border-color: #4e73df;
+    outline: none;
+}
+
+.number-input button {
+    padding: 10px 15px;
+    font-size: 18px;
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.number-input button:hover {
+    background-color: #2e59d9;
+}
+
+select,
+input[type="range"] {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    background-color: #fafafa;
+    font-size: 16px;
+    color: hsl(0, 0%, 5%);
+    transition: border-color 0.2s ease;
+}
+
+select:focus,
+input[type="range"]:focus {
+    border-color: #4e73df;
+    outline: none;
+}
+
+/* Range Slider */
+.slider-container {
+    margin-bottom: 20px;
+}
+
+.slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 10px; /* Slightly thicker slider for better visibility */
+    border-radius: 5px;
+    background: #e0e0e0; /* Soft light gray background */
+    outline: none;
+    transition: background 0.3s ease, transform 0.2s ease; /* Smooth transition for both background and thumb */
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; /* Thumb size */
+    height: 20px; /* Thumb size */
+    border-radius: 50%; /* Circular thumb */
+    background: #af4c63; /* Green color for the thumb */
+    border: 2px solid #333; /* Dark border for contrast */
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease; /* Smooth transition on hover */
+}
+
+.slider::-webkit-slider-thumb:hover {
+    background: #45a049; /* Darker green on hover */
+    transform: scale(1.2); /* Slightly enlarge the thumb on hover */
+}
+
+.slider::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 5px;
+    background: #ddd; /* Light gray background for the track */
+}
+
+.slider:focus {
+    outline: none; /* Remove the outline when focused */
+}
+
+.slider:focus {
+    background: #4e73df;
+}
+
+.slider-value {
+    display: inline-block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: hsl(0, 31%, 94%);
+}
+
+/* Radio Button Styles */
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 16px;
+    color: hsl(0, 16%, 93%);
+}
+
+.radio-group input[type="radio"] {
+    accent-color: #4e73df;
+}
+
+/* Submit Button */
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #2e59d9;
+}
+
+/* Hover effects for all buttons */
+button,
+.submit-btn {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+button:hover,
+.submit-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .churn-prediction-container {
+        padding: 20px;
+    }
+
+    .number-input input[type="number"] {
+        width: 50%;
+    }
+
+    .number-input button {
+        padding: 8px 12px;
+    }
+
+    .radio-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .churn-prediction-container {
+        padding: 15px;
+    }
+
+    .number-input input[type="number"] {
+        width: 40%;
+    }
+
+    .number-input button {
+        padding: 6px 10px;
+    }
+}
+
+/* Result Section Styling */
+#form1Results,
+#form2Results {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    display: none; /* Initially hidden */
+}
+
+/* Heading for Results */
+#form1Results h3,
+#form2Results h3 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* Paragraph for Results */
+#form1Results p,
+#form2Results p {
+    font-size: 18px;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Success Result Styling */
+.result {
+    padding: 20px;
+    background-color: #eaf4e6;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #3a6d3f;
+    margin-top: 10px;
+}
+
+.result h3 {
+    margin-bottom: 10px;
+    font-size: 22px;
+}
+
+/* Transition for showing/hiding results */
+#form1Results,
+#form2Results {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#form1Results.show,
+#form2Results.show {
+    opacity: 1;
+    display: block;
+}

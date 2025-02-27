@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" type="text/css" href="../static/css/HomePage.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <title>RetentionAI | Home</title>
+    <link rel="icon" type="image/x-icon" href="../static/images/Favicon.png">
+</head>
+<body>
+    <div class="wrapper">
+        <nav class="nav">
+            <div class="logopic">
+                <img src="../static/images/Logo.png" alt="Logo"><span class="logo-text">RetentionAI</span>
+            </div>            
+            <div class="nav-menu" id="navMenu">
+                <ul>
+                    <li><a href="index.html" class="link">Home</a></li>
+                    <li><a href="#" id="bankChurnLink" class="link">Bank Churn Prediction</a></li>
+                    <li><a href="#" id="telecomChurnLink" class="link">Telecom Churn Prediction</a></li>
+                    <li><a href="AboutMe.html" class="link" target="_blank">About Me</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="background-overlay"></div>
+        <video autoplay loop muted playsinline class="background-video">
+            <source src="../static/images/Video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <!-- Top Box and Concept Section -->
+        <div class="topbox">
+            <div class="topbox-content">
+                <p class="big-txt">Predict and Prevent <br> Customer Churn</p>
+                <p class="small-txt">Leverage AI-powered insights to retain customers, <br>reduce churn, and drive long-term business growth. <br> Make data-driven decisions with confidence.</p>
+                <div class="btncontainer">
+                    <button id="bankChurnBtn" class="gsbtn">Bank Churn with AI</button>
+                </div>
+                <div class="btncontainer">
+                    <button id="telecomChurnBtn" class="gsbtn">Telecom Churn with AI</button>
+                </div>
+            </div>
+
+            <div class="concept">
+                <div class="video-container">
+                    <video autoplay loop muted playsinline class="concept-video">
+                        <source src="../static/images/BankChurn.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+
+        <!-- Churn Prediction Section with Black Background and Transparent Form -->
+        <div class="form-wrapper">
+            <div class="churn-prediction-container">
+                <h3 class="churn-heading">Bank Customer Information</h3>
+                <p class="churn-description">Please provide the following information to predict churn.</p>
+                <form action="#" method="POST" id="form1">
+                    <!-- Credit Score Input -->
+                    <div class="input-group">
+                        <label for="creditScore" class="form-label">Credit Score</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('creditScore', -1)">-</button>
+                            <input type="number" id="creditScore" name="creditScore" value="300" min="300" max="850">
+                            <button type="button" onclick="changeValue('creditScore', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Gender Select -->
+                    <div class="input-group">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select id="gender" name="gender">
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+
+                    <!-- Age Input -->
+                    <div class="input-group">
+                        <label for="age" class="form-label">Age</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('age', -1)">-</button>
+                            <input type="number" id="age" name="age" value="18" min="18">
+                            <button type="button" onclick="changeValue('age', 1)">+</button>
+                        </div>
+                    </div>
+            
+                    <!-- Tenure Input -->
+                    <div class="input-group">
+                        <label for="tenure" class="form-label">Tenure (Years)</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('tenure', -1)">-</button>
+                            <input type="number" id="tenure" name="tenure" value="0" min="0">
+                            <button type="button" onclick="changeValue('tenure', 1)">+</button>
+                        </div>
+                    </div>
+            
+                    <!-- Balance Input -->
+                    <div class="input-group">
+                        <label for="balance" class="form-label">Balance</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('balance', -100)">-</button>
+                            <input type="number" id="balance" name="balance" value="0" min="0">
+                            <button type="button" onclick="changeValue('balance', 100)">+</button>
+                        </div>
+                    </div>
+            
+                    <!-- Number of Products Input -->
+                    <div class="input-group">
+                        <label for="products" class="form-label">Number of Products</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('products', -1)">-</button>
+                            <input type="number" id="products" name="products" value="1" min="1" max="4">
+                            <button type="button" onclick="changeValue('products', 1)">+</button>
+                        </div>
+                    </div>
+            
+                    <!-- Has Credit Card Radio Buttons -->
+                    <div class="input-group">
+                        <label class="form-label">Has Credit Card?</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="creditCard" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="creditCard" value="No"> No</label>
+                        </div>
+                    </div>
+            
+                    <!-- Is Active Member Radio Buttons -->
+                    <div class="input-group">
+                        <label class="form-label">Is Active Member?</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="activeMember" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="activeMember" value="No"> No</label>
+                        </div>
+                    </div>
+            
+                    <!-- Estimated Salary Input -->
+                    <div class="input-group">
+                        <label for="salary" class="form-label">Estimated Salary</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('salary', -100)">-</button>
+                            <input type="number" id="salary" name="salary" value="0" min="0">
+                            <button type="button" onclick="changeValue('salary', 100)">+</button>
+                        </div>
+                    </div>
+            
+                    <!-- Satisfaction Score Slider -->
+                    <div class="slider-container">
+                        <label for="satisfactionScore" class="form-label">Satisfaction Score</label>
+                        <input type="range" id="satisfactionScore" name="satisfactionScore" class="slider" min="1" max="5" value="5" oninput="updateSliderValue()">
+                        <span id="satisfactionValue" class="slider-value">5</span>
+                    </div>
+            
+                    <!-- Card Type Select -->
+                    <div class="input-group">
+                        <label for="card-type" class="form-label">Card Type</label>
+                        <select id="card-type" name="card-type">
+                            <option>DIAMOND</option>
+                            <option>GOLD</option>
+                            <option>SILVER</option>
+                            <option>PLATINUM</option>
+                        </select>
+                    </div>
+            
+                    <!-- Points Earned Input -->
+                    <div class="input-group">
+                        <label for="pointsEarned" class="form-label">Points Earned</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('pointsEarned', -10)">-</button>
+                            <input type="number" id="pointsEarned" name="pointsEarned" value="0" min="0">
+                            <button type="button" onclick="changeValue('pointsEarned', 10)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- More form fields here as per your original code -->
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn">Predict Churn</button>
+                </form>
+                <!-- Bank Churn Prediction Results -->
+                <div id="form1Results" class="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Prediction Model Options -->
+        <div class="form-wrapper">
+            <div class="churn-prediction-container">
+                <h3 class="churn-heading">Telecom Customer Information</h3>
+                <p class="churn-description">Please provide the following information to predict churn.</p>
+                <form action="#" method="POST" id="form2">
+                    <!-- Credit Score Input -->                   
+                    <div class="input-group">
+                        <label for="accountLength" class="form-label">Account Length (Years)</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('accountLength', -1)">-</button>
+                            <input type="number" id="accountLength" name="accountLength" value="1" min="1">
+                            <button type="button" onclick="changeValue('accountLength', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="serviceType" class="form-label">Service Type</label>
+                        <select id="serviceType" class="form-select">
+                            <option>Fiber Optic</option>
+                            <option>DSL</option>
+                            <option>Cable</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="contractType" class="form-label">Contract Type</label>
+                        <select id="contractType" class="form-select">
+                            <option>Month-to-Month</option>
+                            <option>One Year</option>
+                            <option>Two Year</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="monthlyCharges" class="form-label">Monthly Charges</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('monthlyCharges', -1)">-</button>
+                            <input type="number" id="monthlyCharges" name="monthlyCharges" value="30" min="0">
+                            <button type="button" onclick="changeValue('monthlyCharges', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="serviceCalls" class="form-label">Customer Service Calls</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('serviceCalls', -1)">-</button>
+                            <input type="number" id="serviceCalls" name="serviceCalls" value="0" min="0" max="10">
+                            <button type="button" onclick="changeValue('serviceCalls', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="onlineSecurity" class="form-label">Online Security</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="onlineSecurity" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="onlineSecurity" value="No"> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="onlineBackup" class="form-label">Online Backup</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="onlineBackup" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="onlineBackup" value="No"> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="deviceProtection" class="form-label">Device Protection</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="deviceProtection" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="deviceProtection" value="No"> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="techSupport" class="form-label">Tech Support</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="techSupport" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="techSupport" value="No"> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="streamingTV" class="form-label">Streaming TV</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="streamingTV" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="streamingTV" value="No"> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="streamingMovies" class="form-label">Streaming Movies</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="streamingMovies" value="Yes" checked> Yes</label>
+                            <label><input type="radio" name="streamingMovies" value="No"> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select id="gender" class="form-select">
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="seniorCitizen" class="form-label">Senior Citizen</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="seniorCitizen" value="Yes"> Yes</label>
+                            <label><input type="radio" name="seniorCitizen" value="No" checked> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="partner" class="form-label">Partner</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="partner" value="Yes"> Yes</label>
+                            <label><input type="radio" name="partner" value="No" checked> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="dependents" class="form-label">Dependents</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="dependents" value="Yes"> Yes</label>
+                            <label><input type="radio" name="dependents" value="No" checked> No</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="totalCharges" class="form-label">Total Charges</label>
+                        <div class="number-input">
+                            <button type="button" onclick="changeValue('totalyCharges', -10)">-</button>
+                            <input type="number" id="totalCharges" name="totalCharges" value="70" min="0">
+                            <button type="button" onclick="changeValue('totalCharges', 10)">+</button>
+                        </div>
+                    </div>                    
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn">Predict Churn</button>
+                </form>
+                <!-- Telecom Churn Prediction Results -->
+                <div id="form2Results" class="results-container"></div>
+                    <p></p>
+                </div>
+            </div> 
+        </div>
+        </div>
+    </div>
+
+    <script src="../static/js/HomePage.js"></script>
+</body>
+</html>
