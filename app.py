@@ -3,10 +3,10 @@ import numpy as np
 import joblib
 
 # Load models and scalers
-bank_model = joblib.load("model/banking_model.pkl")
-telecom_model = joblib.load("model/telecom_model.pkl")
-bank_scaler = joblib.load("model/banking_scaler.pkl")
-telecom_scaler = joblib.load("model/telecom_scaler.pkl")
+bank_model = joblib.load("models/banking_model.pkl")
+telecom_model = joblib.load("models/telecom_model.pkl")
+bank_scaler = joblib.load("models/banking_scaler.pkl")
+telecom_scaler = joblib.load("models/telecom_scaler.pkl")
 
 
 # Function to predict churn
