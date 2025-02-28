@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 import pickle
 import os
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, logging
 import joblib
 
 # Suppress Specific Sklearn Warnings
@@ -10,11 +10,29 @@ warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
 app = Flask(__name__)
 
+# Configure logging
+import logging
+app.logger.setLevel(logging.INFO)
+
 # Load Pretrained Models - Removed Scalers
 try:
-    # Load models - keeping only one version of each model
-    telecom_model = joblib.load("telecom_model.pkl")
-    banking_model = joblib.load("banking_model.pkl")
+    # First set of models - removing scalers
+    with open('models/telecom_model.pkl', 'rb') as f:
+        telecom_model = pickle.load(f)
+
+    with open('models/banking_model.pkl', 'rb') as f:
+        banking_model = pickle.load(f)
+    
+    # Loading alternative models if the first attempt fails
+    # These can be used as fallbacks
+    try:
+        bank_model = joblib.load("banking_model.pkl")
+        telecom_model_joblib = joblib.load("telecom_model.pkl")
+    except Exception as e:
+        app.logger.info(f"Joblib models not found, using pickle models: {e}")
+        bank_model = banking_model
+        telecom_model_joblib = telecom_model
+
 except Exception as e:
     print(f"Error loading models: {e}")
     exit(1)
@@ -126,26 +144,52 @@ def predict_churn(model, features):
 @app.route('/api/bank-churn-prediction', methods=['POST'])
 def predict_banking_api():
     try:
-        form_data = request.get_json()  
+        # Log incoming data for debugging
+        form_data = request.get_json()
+        app.logger.info(f"Received banking data: {form_data}")
+        app.logger.info(f"Processing banking form data: {form_data}")
+        
+        # Parse the form data
         user_data = parse_banking_form(form_data)
+        app.logger.info(f"Banking features shape: {user_data.shape}")
+        
+        # Direct prediction without scaling
         prediction = banking_model.predict(user_data)
+        app.logger.info(f"Prediction result: {prediction}")
+        
+        # Return the prediction result
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
     except ValueError as e:
+        app.logger.error(f"ValueError in banking prediction: {str(e)}")
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Exception in banking prediction: {str(e)}")
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Predict Telecom Churn
 @app.route('/api/telecom-churn-prediction', methods=['POST'])
 def predict_telecom_api():
     try:
+        # Log incoming data for debugging
         form_data = request.get_json()
+        app.logger.info(f"Received telecom data: {form_data}")
+        app.logger.info(f"Processing telecom form data: {form_data}")
+        
+        # Parse the form data
         user_data = parse_telecom_form(form_data)
+        app.logger.info(f"Telecom features shape: {user_data.shape}")
+        
+        # Direct prediction without scaling
         prediction = telecom_model.predict(user_data)
+        app.logger.info(f"Prediction result: {prediction}")
+        
+        # Return the prediction result
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
     except ValueError as e:
+        app.logger.error(f"ValueError in telecom prediction: {str(e)}")
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Exception in telecom prediction: {str(e)}")
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Web Routes for Form submissions
@@ -188,6 +232,9 @@ def predict_bank():
             card_type = request.form['card_type']
             points_earned = int(request.form['points_earned'])
 
+            # Log the received data
+            app.logger.info(f"Bank form data: credit_score={credit_score}, gender={gender}, age={age}, tenure={tenure}")
+
             # One-hot Encoding
             gender_encoded = [1 if gender == "Male" else 0, 1 if gender == "Female" else 0]
             card_type_encoded = [1 if card_type == "DIAMOND" else 0, 
@@ -201,8 +248,9 @@ def predict_bank():
                        satisfaction_score, points_earned] + \
                       gender_encoded + card_type_encoded
 
-            # Predict churn directly
-            result = predict_churn(banking_model, features)
+            # Predict churn directly without scaling
+            result = predict_churn(bank_model, features)
+            app.logger.info(f"Bank prediction result: {result}")
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
@@ -237,6 +285,9 @@ def predict_telecom():
             online_security = int(request.form['online_security'])
             gender = request.form['gender']
 
+            # Log the received data
+            app.logger.info(f"Telecom form data: tenure={tenure}, monthly_charges={monthly_charges}, contract={contract}")
+
             # One-hot Encoding
             gender_encoded = [1 if gender == "Male" else 0, 1 if gender == "Female" else 0]
             contract_encoded = [1 if contract == "Month-to-month" else 0,
@@ -257,8 +308,9 @@ def predict_telecom():
                         monthly_charges, total_charges, tenure] + \
                        contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded
 
-            # Predict churn directly
-            result = predict_churn(telecom_model, features)
+            # Predict churn directly without scaling
+            result = predict_churn(telecom_model_joblib, features)
+            app.logger.info(f"Telecom prediction result: {result}")
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
