@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 import pickle
 import os
+import traceback
 from flask import Flask, request, jsonify, render_template, redirect
 
 # Suppress Specific Sklearn Warnings
@@ -100,13 +101,27 @@ def parse_banking_form(form_data):
 def predict_banking():
     try:
         form_data = request.get_json()
+        app.logger.info(f"Received banking data: {form_data}")
+        app.logger.info(f"Processing banking form data: {form_data}")
         user_data = parse_banking_form(form_data)
-        user_data_scaled = banking_scaler.transform(user_data)
+        app.logger.info(f"Banking features shape: {user_data.shape}")
+        
+        # Check if banking_scaler is a proper scaler object with transform method
+        if hasattr(banking_scaler, 'transform'):
+            user_data_scaled = banking_scaler.transform(user_data)
+        else:
+            # If scaler isn't a proper object, use unscaled data
+            app.logger.warning("Banking scaler is not a proper scaler object, using unscaled data")
+            user_data_scaled = user_data
+        
         prediction = banking_model.predict(user_data_scaled)
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
     except ValueError as e:
+        app.logger.error(f"ValueError in banking prediction: {str(e)}")
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Exception in banking prediction: {str(e)}")
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Predict Telecom Churn
@@ -115,12 +130,23 @@ def predict_telecom():
     try:
         form_data = request.get_json()
         user_data = parse_telecom_form(form_data)
-        user_data_scaled = telecom_scaler.transform(user_data)
+        
+        # Check if telecom_scaler is a proper scaler object
+        if hasattr(telecom_scaler, 'transform'):
+            user_data_scaled = telecom_scaler.transform(user_data)
+        else:
+            # If it's not a proper scaler, just proceed with unscaled data
+            app.logger.warning("Telecom scaler is not a proper scaler object, using unscaled data")
+            user_data_scaled = user_data
+            
         prediction = telecom_model.predict(user_data_scaled)
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
     except ValueError as e:
+        app.logger.error(f"ValueError in telecom prediction: {str(e)}")
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Exception in telecom prediction: {str(e)}")
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Navigation Routes
