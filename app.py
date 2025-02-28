@@ -157,7 +157,7 @@ def predict_banking():
         print(f"Received banking data: {form_data}")
         
         user_data = parse_banking_form(form_data)
-        user_data_scaled = banking_scaler.transform(user_data)
+        user_data_scaled = banking_scaler(user_data)
         prediction = banking_model.predict(user_data_scaled)
         
         result = "Churned" if prediction[0] == 1 else "Not Churned"
@@ -183,7 +183,7 @@ def predict_telecom():
         print(f"Received telecom data: {form_data}")
         
         user_data = parse_telecom_form(form_data)
-        user_data_scaled = telecom_scaler.transform(user_data)
+        user_data_scaled = telecom_scaler(user_data)
         prediction = telecom_model.predict(user_data_scaled)
         
         result = "Churned" if prediction[0] == 1 else "Not Churned"
