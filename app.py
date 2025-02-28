@@ -2,7 +2,8 @@ import warnings
 import numpy as np
 import pickle
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
+import joblib
 
 # Suppress Specific Sklearn Warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
@@ -11,6 +12,7 @@ app = Flask(__name__)
 
 # Load Pretrained Models and Scalers
 try:
+    # First set of models
     with open('models/telecom_model.pkl', 'rb') as f:
         telecom_model = pickle.load(f)
 
@@ -22,14 +24,21 @@ try:
 
     with open('models/banking_scaler.pkl', 'rb') as f:
         banking_scaler = pickle.load(f)
+        
+    # Second set of models (from second part of the code)
+    bank_model = joblib.load("bank_churn_model.pkl")
+    telecom_model_joblib = joblib.load("telecom_churn_model.pkl")
+    bank_scaler_joblib = joblib.load("scaler_bank.pkl")
+    telecom_scaler_joblib = joblib.load("scaler_telecom.pkl")
 
 except Exception as e:
     print(f"Error loading models or scalers: {e}")
     exit(1)
 
-# Function to Parse Bank Customer Form Data
+# Function to Parse Telecom Customer Form Data
 def parse_telecom_form(form_data):
     try:
+        # Extract form fields
         tenure = int(form_data['tenure'])
         monthly_charges = float(form_data['monthly_charges'])
         total_charges = float(form_data['total_charges'])
@@ -46,12 +55,11 @@ def parse_telecom_form(form_data):
         tech_support = int(form_data['tech_support'])
         online_security = int(form_data['online_security'])
         gender = form_data['gender']
-
-        # One-hot Encoding Categorical Variables
         contract = form_data['contract']
         internet_service = form_data['internet_service']
         payment_method = form_data['payment_method']
 
+        # One-hot Encoding Categorical Variables
         contract_encoded = [1 if contract == "Month-to-month" else 0,
                             1 if contract == "One year" else 0,
                             1 if contract == "Two year" else 0]
@@ -67,22 +75,24 @@ def parse_telecom_form(form_data):
 
         gender_encoded = [1 if gender == "Male" else 0, 1 if gender == "Female" else 0]
 
-        # Create Features Array
-        features = np.array([paperless_billing, senior_citizen, streaming_tv, streaming_movies,
-                             multiple_lines, phone_service, device_protection, online_backup,
-                             partner, dependents, tech_support, online_security,
-                             monthly_charges, total_charges, tenure] +
-                            contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded).reshape(1, -1)
-        return features
+        # Create Features Array in the same format as in the code
+        features = [paperless_billing, senior_citizen, streaming_tv, streaming_movies,
+                    multiple_lines, phone_service, device_protection, online_backup,
+                    partner, dependents, tech_support, online_security,
+                    monthly_charges, total_charges, tenure] + \
+                   contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded
+                   
+        return np.array(features).reshape(1, -1)
 
     except KeyError as e:
         raise ValueError(f"Missing required field: {e}")
     except Exception as e:
         raise ValueError(f"Error processing form data: {e}")
 
-# Function to Parse Telecom Customer Form Data
+# Function to Parse Bank Customer Form Data
 def parse_banking_form(form_data):
     try:
+        # Extract form fields
         credit_score = int(form_data['credit_score'])
         age = int(form_data['age'])
         tenure = int(form_data['tenure'])
@@ -103,21 +113,29 @@ def parse_banking_form(form_data):
                              1 if card_type == "SILVER" else 0,
                              1 if card_type == "PLATINUM" else 0]
 
-        # Create Feature Array
-        features = np.array([credit_score, age, tenure, balance, num_of_products,
-                             has_cr_card, is_active_member, estimated_salary,
-                             satisfaction_score, point_earned] +
-                            gender_encoded + card_type_encoded).reshape(1, -1)
-        return features
+        # Create Feature Array in the same format as in the code
+        features = [credit_score, age, tenure, balance, num_of_products,
+                    has_cr_card, is_active_member, estimated_salary,
+                    satisfaction_score, point_earned] + \
+                   gender_encoded + card_type_encoded
+                   
+        return np.array(features).reshape(1, -1)
 
     except KeyError as e:
         raise ValueError(f"Missing required field: {e}")
     except Exception as e:
         raise ValueError(f"Error processing form data: {e}")
 
+# Function to predict churn (from second part of the code)
+def predict_churn(model, scaler, features):
+    scaled_features = scaler.transform([features])
+    prediction = model.predict(scaled_features)
+    return "Churned" if prediction[0] == 1 else "Not Churned"
+
+# API Routes for JSON requests
 # Predict Bank Churn
 @app.route('/api/bank-churn-prediction', methods=['POST'])
-def predict_banking():
+def predict_banking_api():
     try:
         form_data = request.get_json()  # Parse incoming JSON request
         user_data = parse_banking_form(form_data)
@@ -131,7 +149,7 @@ def predict_banking():
 
 # Predict Telecom Churn
 @app.route('/api/telecom-churn-prediction', methods=['POST'])
-def predict_telecom():
+def predict_telecom_api():
     try:
         form_data = request.get_json()  # Parse incoming JSON request
         user_data = parse_telecom_form(form_data)
@@ -142,27 +160,8 @@ def predict_telecom():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': 'An error occurred during prediction.'}), 500
-    
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-import os
-import numpy as np
-import joblib
 
-# Initialize Flask app
-app = Flask(__name__)
-
-# Load the models and scalers
-bank_model = joblib.load("bank_churn_model.pkl")
-telecom_model = joblib.load("telecom_churn_model.pkl")
-bank_scaler = joblib.load("scaler_bank.pkl")
-telecom_scaler = joblib.load("scaler_telecom.pkl")
-
-# Function to predict churn
-def predict_churn(model, scaler, features):
-    scaled_features = scaler.transform([features])
-    prediction = model.predict(scaled_features)
-    return "Churned" if prediction[0] == 1 else "Not Churned"
-
+# Web Routes for Form submissions
 # Home page route
 @app.route('/')
 @app.route('/index.html')
@@ -172,16 +171,6 @@ def home():
     except Exception as e:
         app.logger.error(f"Error loading Home page: {str(e)}")
         return f"Error loading Home page: {str(e)}", 500
-
-# Simple navigation routes - both return to index
-@app.route('/bank-prediction')
-@app.route('/telecom-prediction')
-def return_to_index():
-    try:
-        return redirect('/')
-    except Exception as e:
-        app.logger.error(f"Error redirecting to index: {str(e)}")
-        return f"Error redirecting to index: {str(e)}", 500
 
 # About Me page route
 @app.route('/aboutme')
@@ -214,16 +203,19 @@ def predict_bank():
 
             # One-hot Encoding
             gender_encoded = [1 if gender == "Male" else 0, 1 if gender == "Female" else 0]
-            card_type_encoded = [1 if card_type == "DIAMOND" else 0, 1 if card_type == "GOLD" else 0, 
-                                 1 if card_type == "SILVER" else 0, 1 if card_type == "PLATINUM" else 0]
+            card_type_encoded = [1 if card_type == "DIAMOND" else 0, 
+                                1 if card_type == "GOLD" else 0, 
+                                1 if card_type == "SILVER" else 0, 
+                                1 if card_type == "PLATINUM" else 0]
 
-            # Create feature array
-            features = np.array([credit_score, age, tenure, balance, num_of_products, 
-                                 has_cr_card, is_active_member, estimated_salary, 
-                                 satisfaction_score, points_earned] + gender_encoded + card_type_encoded)
+            # Create feature array in consistent style
+            features = [credit_score, age, tenure, balance, num_of_products, 
+                       has_cr_card, is_active_member, estimated_salary, 
+                       satisfaction_score, points_earned] + \
+                      gender_encoded + card_type_encoded
 
             # Predict churn
-            result = predict_churn(bank_model, bank_scaler, features)
+            result = predict_churn(bank_model, bank_scaler_joblib, features)
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
@@ -259,22 +251,30 @@ def predict_telecom():
             gender = request.form['gender']
 
             # One-hot Encoding
-            contract_encoded = [1 if contract == "Month-to-month" else 0, 1 if contract == "One year" else 0, 1 if contract == "Two year" else 0]
+            contract_encoded = [1 if contract == "Month-to-month" else 0, 
+                               1 if contract == "One year" else 0, 
+                               1 if contract == "Two year" else 0]
+                               
             internet_service_encoded = [1 if internet_service == "Fiber optic" else 0, 
-                                        1 if internet_service == "DSL" else 0, 1 if internet_service == "No" else 0]
+                                       1 if internet_service == "DSL" else 0, 
+                                       1 if internet_service == "No" else 0]
+                                       
             payment_method_encoded = [1 if payment_method == "Electronic check" else 0, 
-                                      1 if payment_method == "Mailed check" else 0, 1 if payment_method == "Bank transfer (automatic)" else 0, 
-                                      1 if payment_method == "Credit card (automatic)" else 0]
+                                     1 if payment_method == "Mailed check" else 0, 
+                                     1 if payment_method == "Bank transfer (automatic)" else 0, 
+                                     1 if payment_method == "Credit card (automatic)" else 0]
+                                     
             gender_encoded = [1 if gender == "Male" else 0, 1 if gender == "Female" else 0]
 
-            # Feature array
-            features = np.array([paperless_billing, senior_citizen, streaming_tv, streaming_movies,
-                                 multiple_lines, phone_service, device_protection, online_backup,
-                                 partner, dependents, tech_support, online_security,
-                                 monthly_charges, total_charges, tenure] + contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded)
+            # Feature array in consistent style
+            features = [paperless_billing, senior_citizen, streaming_tv, streaming_movies,
+                       multiple_lines, phone_service, device_protection, online_backup,
+                       partner, dependents, tech_support, online_security,
+                       monthly_charges, total_charges, tenure] + \
+                      contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded
 
             # Predict churn
-            result = predict_churn(telecom_model, telecom_scaler, features)
+            result = predict_churn(telecom_model_joblib, telecom_scaler_joblib, features)
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
@@ -282,16 +282,6 @@ def predict_telecom():
     except Exception as e:
         app.logger.error(f"Error during prediction for telecom: {str(e)}")
         return f"Error during prediction: {str(e)}", 500
-
-# About Me page route
-@app.route('/aboutme')
-@app.route('/AboutMe.html')
-def aboutme():
-    try:
-        return render_template('AboutMe.html')
-    except Exception as e:
-        app.logger.error(f"Error loading AboutMe page: {str(e)}")
-        return f"Error loading AboutMe page: {str(e)}", 500
 
 # Simple navigation routes - both return to index
 @app.route('/bank-prediction')
