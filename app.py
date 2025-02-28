@@ -126,15 +126,16 @@ def parse_banking_form(form_data):
     except Exception as e:
         raise ValueError(f"Error processing form data: {e}")
 
-# Modified function to predict churn - now handles properly shaped inputs
-def predict_churn(model, scaler, features):
+# Modified function to predict churn - now directly uses the model without scaling
+def predict_churn(model, features):
     # Check if features is already a 2D array or needs reshaping
     if len(np.array(features).shape) == 1:
         # If it's a 1D array (flat list), reshape it
         features = np.array(features).reshape(1, -1)
     
-    scaled_features = scaler.transform(features)
-    prediction = model.predict(scaled_features)
+    # Directly predict without scaling - assuming models were trained on already scaled data
+    # or that scaling is handled internally
+    prediction = model.predict(features)
     return "Churned" if prediction[0] == 1 else "Not Churned"
 
 # API Routes for JSON requests
@@ -144,8 +145,8 @@ def predict_banking_api():
     try:
         form_data = request.get_json()  
         user_data = parse_banking_form(form_data)
-        user_data_scaled = banking_scaler.transform(user_data)
-        prediction = banking_model.predict(user_data_scaled)
+        # Skip the transformation step
+        prediction = banking_model.predict(user_data)
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
@@ -158,8 +159,8 @@ def predict_telecom_api():
     try:
         form_data = request.get_json()  # Parse incoming JSON request
         user_data = parse_telecom_form(form_data)
-        user_data_scaled = telecom_scaler.transform(user_data)
-        prediction = telecom_model.predict(user_data_scaled)
+        # Skip the transformation step
+        prediction = telecom_model.predict(user_data)
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
@@ -219,8 +220,8 @@ def predict_bank():
                        satisfaction_score, points_earned] + \
                       gender_encoded + card_type_encoded
 
-            # Predict churn (no need to reshape here, predict_churn will handle it)
-            result = predict_churn(bank_model, bank_scaler_joblib, features)
+            # Predict churn - modified to not use scaler
+            result = predict_churn(bank_model, features)
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
@@ -278,8 +279,8 @@ def predict_telecom():
                        monthly_charges, total_charges, tenure] + \
                       contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded
 
-            # Predict churn (no need to reshape here, predict_churn will handle it)
-            result = predict_churn(telecom_model_joblib, telecom_scaler_joblib, features)
+            # Predict churn - modified to not use scaler
+            result = predict_churn(telecom_model_joblib, features)
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
