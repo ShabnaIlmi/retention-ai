@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 import pickle
 import os
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, logging
 import joblib
 
 # Suppress Specific Sklearn Warnings
@@ -10,29 +10,27 @@ warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
 app = Flask(__name__)
 
-# Load Pretrained Models and Scalers
+# Load Pretrained Models and Scalers - Simplified to avoid duplicates
 try:
-    # First set of models
-    with open('models/telecom_model.pkl', 'rb') as f:
-        telecom_model = pickle.load(f)
-
-    with open('models/banking_model.pkl', 'rb') as f:
-        banking_model = pickle.load(f)
-
-    with open('models/telecom_scaler.pkl', 'rb') as f:
-        telecom_scaler = pickle.load(f)
-
-    with open('models/banking_scaler.pkl', 'rb') as f:
-        banking_scaler = pickle.load(f)
+    # Use one consistent method to load all models and scalers
+    banking_model = joblib.load("models/banking_model.pkl")
+    telecom_model = joblib.load("models/telecom_model.pkl")
+    
+    # Load scalers - with error handling in case they're not properly formatted
+    try:
+        banking_scaler = joblib.load("models/banking_scaler.pkl")
+    except Exception as e:
+        print(f"Warning: Error loading banking scaler: {e}. Predictions will use unscaled data.")
+        banking_scaler = None
         
-    # Second set of models (from second part of the code)
-    bank_model = joblib.load("banking_model.pkl")
-    telecom_model_joblib = joblib.load("telecom_model.pkl")
-    bank_scaler_joblib = joblib.load("banking_scaler.pkl")
-    telecom_scaler_joblib = joblib.load("telecom_scaler.pkl")
+    try:
+        telecom_scaler = joblib.load("models/telecom_scaler.pkl")
+    except Exception as e:
+        print(f"Warning: Error loading telecom scaler: {e}. Predictions will use unscaled data.")
+        telecom_scaler = None
 
 except Exception as e:
-    print(f"Error loading models or scalers: {e}")
+    print(f"Error loading models: {e}")
     exit(1)
 
 # Function to Parse Telecom Customer Form Data
@@ -81,7 +79,8 @@ def parse_telecom_form(form_data):
                     partner, dependents, tech_support, online_security,
                     monthly_charges, total_charges, tenure] + \
                    contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded
-                   
+        
+        app.logger.info(f"Telecom features count: {len(features)}")       
         return np.array(features).reshape(1, -1)
 
     except KeyError as e:
@@ -92,6 +91,9 @@ def parse_telecom_form(form_data):
 # Function to Parse Bank Customer Form Data
 def parse_banking_form(form_data):
     try:
+        # Log the incoming data for debugging
+        app.logger.info(f"Processing banking form data: {form_data}")
+        
         # Extract form fields
         credit_score = int(form_data['credit_score'])
         age = int(form_data['age'])
@@ -101,8 +103,11 @@ def parse_banking_form(form_data):
         has_cr_card = int(form_data['has_cr_card'])
         is_active_member = int(form_data['is_active_member'])
         estimated_salary = float(form_data['estimated_salary'])
-        satisfaction_score = int(form_data['satisfaction_score'])
-        point_earned = int(form_data['point_earned'])
+        
+        # Handle different field names consistently
+        satisfaction_score = int(form_data.get('satisfaction_score', form_data.get('point_earned', 0)))
+        point_earned = int(form_data.get('point_earned', form_data.get('points_earned', 0)))
+        
         gender = form_data['gender']
         card_type = form_data['card_type']
 
@@ -118,53 +123,72 @@ def parse_banking_form(form_data):
                     has_cr_card, is_active_member, estimated_salary,
                     satisfaction_score, point_earned] + \
                    gender_encoded + card_type_encoded
-                   
-        return np.array(features).reshape(1, -1)
+        
+        # Log the feature shape for debugging
+        feature_array = np.array(features).reshape(1, -1)
+        app.logger.info(f"Banking features shape: {feature_array.shape}")
+        return feature_array
 
     except KeyError as e:
         raise ValueError(f"Missing required field: {e}")
     except Exception as e:
         raise ValueError(f"Error processing form data: {e}")
 
-# Modified function to predict churn - now directly uses the model without scaling
-def predict_churn(model, features):
-    # Check if features is already a 2D array or needs reshaping
-    if len(np.array(features).shape) == 1:
-        # If it's a 1D array (flat list), reshape it
-        features = np.array(features).reshape(1, -1)
-    
-    # Directly predict without scaling - assuming models were trained on already scaled data
-    # or that scaling is handled internally
-    prediction = model.predict(features)
-    return "Churned" if prediction[0] == 1 else "Not Churned"
+# Function to make predictions with safe scaling
+def predict_with_scaling(model, scaler, features):
+    try:
+        # Apply scaling if scaler is available and valid
+        if scaler is not None:
+            try:
+                features_scaled = scaler.transform(features)
+                prediction = model.predict(features_scaled)
+            except (AttributeError, ValueError) as e:
+                app.logger.warning(f"Scaling error: {e}. Using unscaled features.")
+                prediction = model.predict(features)
+        else:
+            # If no scaler, use features directly
+            prediction = model.predict(features)
+            
+        return "Churned" if prediction[0] == 1 else "Not Churned"
+    except Exception as e:
+        app.logger.error(f"Prediction error: {e}")
+        raise
 
 # API Routes for JSON requests
 # Predict Bank Churn
 @app.route('/api/bank-churn-prediction', methods=['POST'])
 def predict_banking_api():
     try:
-        form_data = request.get_json()  
+        form_data = request.get_json()
+        app.logger.info(f"Received banking data: {form_data}")
+        
         user_data = parse_banking_form(form_data)
-        # Skip the transformation step
-        prediction = banking_model.predict(user_data)
-        return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
+        result = predict_with_scaling(banking_model, banking_scaler, user_data)
+        
+        return jsonify({'prediction': result})
     except ValueError as e:
+        app.logger.error(f"Value error in banking API: {e}")
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Exception in banking API: {str(e)}")
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Predict Telecom Churn
 @app.route('/api/telecom-churn-prediction', methods=['POST'])
 def predict_telecom_api():
     try:
-        form_data = request.get_json()  # Parse incoming JSON request
+        form_data = request.get_json()
+        app.logger.info(f"Received telecom data: {form_data}")
+        
         user_data = parse_telecom_form(form_data)
-        # Skip the transformation step
-        prediction = telecom_model.predict(user_data)
-        return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
+        result = predict_with_scaling(telecom_model, telecom_scaler, user_data)
+        
+        return jsonify({'prediction': result})
     except ValueError as e:
+        app.logger.error(f"Value error in telecom API: {e}")
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Exception in telecom API: {str(e)}")
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Web Routes for Form submissions
@@ -193,6 +217,9 @@ def aboutme():
 def predict_bank():
     try:
         if request.method == 'POST':
+            # Log form data for debugging
+            app.logger.info(f"Bank form data: {request.form}")
+            
             # Collecting input from the form
             credit_score = int(request.form['credit_score'])
             gender = request.form['gender']
@@ -219,22 +246,27 @@ def predict_bank():
                        has_cr_card, is_active_member, estimated_salary, 
                        satisfaction_score, points_earned] + \
                       gender_encoded + card_type_encoded
-
-            # Predict churn - modified to not use scaler
-            result = predict_churn(bank_model, features)
+                      
+            features_array = np.array(features).reshape(1, -1)
+            
+            # Predict using the utility function
+            result = predict_with_scaling(banking_model, banking_scaler, features_array)
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
 
     except Exception as e:
         app.logger.error(f"Error during prediction for bank: {str(e)}")
-        return f"Error during prediction: {str(e)}", 500
+        return render_template('index.html', prediction_result=f"Error: {str(e)}")
 
 # Telecom customer prediction route
 @app.route('/predict-telecom', methods=['POST'])
 def predict_telecom():
     try:
         if request.method == 'POST':
+            # Log form data for debugging
+            app.logger.info(f"Telecom form data: {request.form}")
+            
             # Collecting input from the form
             tenure = int(request.form['tenure'])
             monthly_charges = float(request.form['monthly_charges'])
@@ -278,16 +310,18 @@ def predict_telecom():
                        partner, dependents, tech_support, online_security,
                        monthly_charges, total_charges, tenure] + \
                       contract_encoded + internet_service_encoded + payment_method_encoded + gender_encoded
-
-            # Predict churn - modified to not use scaler
-            result = predict_churn(telecom_model_joblib, features)
+                      
+            features_array = np.array(features).reshape(1, -1)
+            
+            # Predict using the utility function  
+            result = predict_with_scaling(telecom_model, telecom_scaler, features_array)
 
             # Render prediction result
             return render_template('index.html', prediction_result=f"Predicted Churn Status: {result}")
 
     except Exception as e:
         app.logger.error(f"Error during prediction for telecom: {str(e)}")
-        return f"Error during prediction: {str(e)}", 500
+        return render_template('index.html', prediction_result=f"Error: {str(e)}")
 
 # Simple navigation routes - both return to index
 @app.route('/bank-prediction')
@@ -302,6 +336,10 @@ def return_to_index():
 # Fix Heroku Deployment Port Issue
 if __name__ == '__main__':
     try:
+        # Configure logging
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        
         # Get the port dynamically from the environment (Heroku)
         port = int(os.environ.get("PORT", 5000))  # Bind to dynamic port or 5000 for local development
         # Run the app with host 0.0.0.0 so it listens on all interfaces
