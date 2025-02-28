@@ -2,7 +2,6 @@ import warnings
 import numpy as np
 import pickle
 import os
-import traceback
 from flask import Flask, request, jsonify, render_template, redirect
 
 # Suppress Specific Sklearn Warnings
@@ -102,19 +101,49 @@ def predict_banking():
     try:
         form_data = request.get_json()
         user_data = parse_banking_form(form_data)
-        if hasattr(banking_scaler, 'transform'):
-            user_data_scaled = banking_scaler.transform(user_data)
-        else:
-            user_data_scaled = user_data
-        prediction = banking_model.predict(user_data_scaled)
+
+        # Skip scaling (do not transform)
+        prediction = banking_model.predict(user_data)
         return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': 'An error occurred during prediction.'}), 500
+
+# Predict Telecom Churn
+@app.route('/api/telecom-churn-prediction', methods=['POST'])
+def predict_telecom():
+    try:
+        form_data = request.get_json()
+        user_data = parse_telecom_form(form_data)
+
+        # Skip scaling (do not transform)
+        prediction = telecom_model.predict(user_data)
+        return jsonify({'prediction': "Churned" if prediction[0] == 1 else "Not Churned"})
+    
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': 'An error occurred during prediction.'}), 500
 
 # Navigation Routes
+@app.route('/bank-prediction')
+@app.route('/telecom-prediction')
+def return_to_index():
+    return redirect('/')
+
+@app.route('/aboutme')
+@app.route('/AboutMe.html')
+def aboutme():
+    try:
+        return render_template('AboutMe.html')
+    except Exception as e:
+        app.logger.error(f"Error loading AboutMe page: {str(e)}")
+        return f"Error loading AboutMe page: {str(e)}", 500
+
 @app.route('/')
+@app.route('/index.html')
 def home():
     return render_template('index.html')
 
