@@ -81,9 +81,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Trigger an input event to ensure any listeners are notified
                 const event = new Event('input', { bubbles: true });
                 input.dispatchEvent(event);
+                
+                // If we're changing monthly charges or account length in the telecom form, 
+                // update the total charges calculation
+                if (inputId === "monthlyCharges" || inputId === "accountLength") {
+                    updateTotalCharges();
+                }
             }
         } else {
             console.error(`Input with ID ${inputId} not found`);
+        }
+    };
+
+    // Function to update total charges based on monthly charges and account length
+    window.updateTotalCharges = function() {
+        const monthlyCharges = parseFloat(document.getElementById("monthlyCharges")?.value || 0);
+        const accountLength = parseInt(document.getElementById("accountLength")?.value || 0);
+        const totalChargesInput = document.getElementById("totalCharges");
+        
+        if (totalChargesInput && !isNaN(monthlyCharges) && !isNaN(accountLength)) {
+            // Calculate approximate total charges (monthly * months)
+            const calculatedTotal = (monthlyCharges * accountLength * 12).toFixed(2);
+            totalChargesInput.value = calculatedTotal;
         }
     };
 
@@ -102,6 +121,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Call the update function on DOM content load
     updateSliderValue();
+    
+    // Set up event listeners for monthly charges and account length
+    const monthlyChargesInput = document.getElementById("monthlyCharges");
+    const accountLengthInput = document.getElementById("accountLength");
+    
+    if (monthlyChargesInput) {
+        monthlyChargesInput.addEventListener("input", updateTotalCharges);
+    }
+    
+    if (accountLengthInput) {
+        accountLengthInput.addEventListener("input", updateTotalCharges);
+    }
+    
+    // Initialize total charges calculation
+    updateTotalCharges();
 
     // Add event listeners to all submit buttons in forms
     document.querySelectorAll('form').forEach(form => {
@@ -219,6 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const products = parseInt(document.getElementById("products").value);
         const cardType = document.getElementById("card-type").value;
         const satisfactionScore = parseInt(document.getElementById("satisfactionScore").value);
+        const totalCharges = parseFloat(document.getElementById("bankTotalCharges")?.value || 0);
 
         // For radio buttons (using optional chaining in case none is selected)
         const creditCard = document.querySelector('input[name="creditCard"]:checked')?.value || "Not Selected";
@@ -228,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!validateBankFormInputs(
             creditScore, age, balance, salary, pointsEarned, 
             gender, tenure, products, cardType, 
-            satisfactionScore, creditCard, activeMember)) {
+            satisfactionScore, creditCard, activeMember, totalCharges)) {
             return;
         }
 
@@ -245,14 +280,15 @@ document.addEventListener("DOMContentLoaded", function () {
             satisfaction_score: satisfactionScore,
             point_earned: pointsEarned,
             gender: gender,
-            card_type: cardType
+            card_type: cardType,
+            total_charges: totalCharges
         };
 
         // Build a confirmation message
         const confirmationMessage = buildBankConfirmationMessage(
             creditScore, age, gender, tenure, balance, 
             products, creditCard, activeMember, salary, 
-            satisfactionScore, cardType, pointsEarned
+            satisfactionScore, cardType, pointsEarned, totalCharges
         );
 
         if (confirm(confirmationMessage)) {
@@ -286,7 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function validateBankFormInputs(
         creditScore, age, balance, salary, pointsEarned, 
         gender, tenure, products, cardType, 
-        satisfactionScore, creditCard, activeMember) {
+        satisfactionScore, creditCard, activeMember, totalCharges) {
         
         // Validate required fields are not null or empty
         if (!creditScore || !age || isNaN(balance) || isNaN(salary) || !pointsEarned || 
@@ -330,15 +366,21 @@ document.addEventListener("DOMContentLoaded", function () {
             return false;
         }
         
+        // Ensure total charges is a valid number if present
+        if (totalCharges !== undefined && (isNaN(totalCharges) || totalCharges < 0)) {
+            alert("Total Charges must be a valid number greater than or equal to 0.");
+            return false;
+        }
+        
         return true;
     }
     
     function buildBankConfirmationMessage(
         creditScore, age, gender, tenure, balance, 
         products, creditCard, activeMember, salary, 
-        satisfactionScore, cardType, pointsEarned) {
+        satisfactionScore, cardType, pointsEarned, totalCharges) {
         
-        return `
+        let message = `
 Customer Information:
 ----------------------------------
 Credit Score: ${creditScore}
@@ -352,9 +394,17 @@ Is Active Member: ${activeMember}
 Estimated Salary: ${salary}
 Satisfaction Score: ${satisfactionScore}
 Card Type: ${cardType}
-Points Earned: ${pointsEarned}
+Points Earned: ${pointsEarned}`;
+
+        if (totalCharges !== undefined) {
+            message += `\nTotal Charges: ${totalCharges}`;
+        }
+        
+        message += `
 ----------------------------------
 Do you want to proceed?`;
+        
+        return message;
     }
 
     // Validate Telecom Customer Information Form (Form 2)
@@ -368,6 +418,7 @@ Do you want to proceed?`;
         const contractType = document.getElementById("contractType").value;
         const monthlyCharges = parseFloat(document.getElementById("monthlyCharges").value);
         const serviceCalls = parseInt(document.getElementById("serviceCalls").value);
+        const totalCharges = parseFloat(document.getElementById("totalCharges").value);
 
         // For radio buttons and selects
         const onlineSecurity = document.querySelector('input[name="onlineSecurity"]:checked')?.value || "Not Selected";
@@ -388,12 +439,9 @@ Do you want to proceed?`;
         const multipleLines = document.querySelector('input[name="multipleLines"]:checked')?.value || "Yes"; 
         const paymentMethod = document.getElementById("paymentMethod")?.value || "Electronic check"; 
 
-        // Calculate total charges (this was previously missing in the original code)
-        const totalCharges = monthlyCharges * accountLength;
-
         // Validate inputs
         if (!validateTelecomFormInputs(
-            accountLength, serviceType, contractType, monthlyCharges, serviceCalls,
+            accountLength, serviceType, contractType, monthlyCharges, serviceCalls, totalCharges,
             gender, onlineSecurity, onlineBackup, deviceProtection, techSupport,
             streamingTV, streamingMovies, seniorCitizen, partner, dependents)) {
             return;
@@ -424,7 +472,7 @@ Do you want to proceed?`;
 
         // Build a confirmation message
         const confirmationMessage = buildTelecomConfirmationMessage(
-            accountLength, serviceType, contractType, monthlyCharges, serviceCalls,
+            accountLength, serviceType, contractType, monthlyCharges, serviceCalls, totalCharges,
             onlineSecurity, onlineBackup, deviceProtection, techSupport,
             streamingTV, streamingMovies, gender, seniorCitizen, partner, dependents
         );
@@ -458,7 +506,7 @@ Do you want to proceed?`;
     }
 
     function validateTelecomFormInputs(
-        accountLength, serviceType, contractType, monthlyCharges, serviceCalls,
+        accountLength, serviceType, contractType, monthlyCharges, serviceCalls, totalCharges,
         gender, onlineSecurity, onlineBackup, deviceProtection, techSupport,
         streamingTV, streamingMovies, seniorCitizen, partner, dependents) {
         
@@ -490,11 +538,17 @@ Do you want to proceed?`;
             return false;
         }
         
+        // Ensure Total Charges is a valid number
+        if (isNaN(totalCharges) || totalCharges < 0) {
+            alert("Total Charges must be a valid number and cannot be negative.");
+            return false;
+        }
+        
         return true;
     }
     
     function buildTelecomConfirmationMessage(
-        accountLength, serviceType, contractType, monthlyCharges, serviceCalls,
+        accountLength, serviceType, contractType, monthlyCharges, serviceCalls, totalCharges,
         onlineSecurity, onlineBackup, deviceProtection, techSupport,
         streamingTV, streamingMovies, gender, seniorCitizen, partner, dependents) {
         
@@ -505,6 +559,7 @@ Account Length: ${accountLength}
 Service Type: ${serviceType}
 Contract Type: ${contractType}
 Monthly Charges: ${monthlyCharges}
+Total Charges: ${totalCharges}
 Customer Service Calls: ${serviceCalls}
 Online Security: ${onlineSecurity}
 Online Backup: ${onlineBackup}
